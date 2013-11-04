@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE beans PUBLIC '-//SPRING//DTD BEAN//EN' 'http://www.springframework.org/dtd/spring-beans.dtd'>
+
+<beans>
+    <!-- Note: All beans should be prefixed ${project.artifactId} in their ID in general -->
+    <!-- Exceptions: service beans (unique name) and beans with name conventions (e.g. web scripts) -->
+
+	<bean id="webscript.org.alfresco.hackathon.stores.store.check.get" 
+		class="org.alfresco.hackathon.stores.webscript.CheckNode"
+		parent="webscript" lazy-init="default" autowire="default" dependency-check="default">
+		<property name="services" ref="ServiceRegistry"/>
+		<!-- 
+		<property name="compessedStoreService" ref="compessedStoreService"/>
+		-->
+	</bean>
+
+</beans>
