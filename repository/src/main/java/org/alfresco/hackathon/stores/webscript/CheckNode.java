@@ -1,6 +1,5 @@
 package org.alfresco.hackathon.stores.webscript;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +24,7 @@ import org.springframework.extensions.webscripts.WebScriptRequest;
 /**
  * Check web-script
  * 
- * @author Andrei T.
+ * @author Andrei T. (andrei.temirbulatov@westernacher.com)
  */
 public class CheckNode extends DeclarativeWebScript {
 
