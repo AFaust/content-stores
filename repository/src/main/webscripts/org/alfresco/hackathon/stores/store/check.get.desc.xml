@@ -1,0 +1,9 @@
+<webscript>
+	<shortname>Check node</shortname>
+	<description>
+		A service to check node in store.
+	</description>
+	<url>/api/hashCheck/{storeType}/{storeId}/{id}</url>
+	<format default="json" />
+	<authentication>user</authentication>
+</webscript>
