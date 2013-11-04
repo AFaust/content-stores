@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<alfresco-config>
+
+    <plug-ins>
+        <evaluators>
+            <evaluator id="alfresco-version" class="com.prodyna.alfresco.modules.compatibility.common.surf.evaluator.VersionConfigEvaluator" />
+            <evaluator id="alfresco-version+string-compare" class="com.prodyna.alfresco.modules.compatibility.common.surf.evaluator.VersionedStringConfigEvaluator" />
+        </evaluators>
+    </plug-ins>
+
+</alfresco-config>
