@@ -2,12 +2,12 @@
 {
 	"nodeRef": "${nodeRef?string}",
 	"modified": "${lastModified?string}",
-	"mimitype": "${mimeType!""}",
+	"mimetype": "${mimeType!""}",
 	"encoding": "${encoding!""}",
 	"hashValues": [
 	<#if hashValues??>
 		<#list hashValues as hash>
-			"${hash?string}"<#if hashValues?has_next>,</#if>
+			"${hash}"<#if hashValues_has_next>,</#if>
 		</#list>
 	</#if>
 	]

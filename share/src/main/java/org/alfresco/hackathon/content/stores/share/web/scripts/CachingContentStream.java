@@ -497,7 +497,7 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
                 currentSession);
 
         final StringBuilder uri = new StringBuilder(
-                MessageFormat.format("/api/cacheHash/{0}/{1}/{2}", URLEncoder.encode(params.getStoreType()),
+                MessageFormat.format("/api/hashCheck/{0}/{1}/{2}", URLEncoder.encode(params.getStoreType()),
                         URLEncoder.encode(params.getStoreIdentifier()), URLEncoder.encode(params.getId())));
 
         if (params.getFileName() != null || params.getExtensionPath() != null || params.getThumbnailName() != null

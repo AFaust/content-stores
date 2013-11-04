@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>org.alfresco.hackathon.content-stores.share</artifactId>
-    <name></name>
+    <name>Content Stores - Share Module</name>
 
     <properties>
 
