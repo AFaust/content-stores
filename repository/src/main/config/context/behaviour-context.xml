@@ -1,9 +1,15 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
            http://www.springframework.org/schema/beans
            http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
     <!-- Note: All beans should be prefixed ${project.artifactId} in their ID in general -->
     <!-- Exceptions: service beans (unique name) and beans with name conventions (e.g. web scripts) -->
+
+    <bean id="${project.artifactId}-FingerprintPolicy" class="${basePackage}.FingerprintPolicy">
+        <property name="nodeService" ref="NodeService" />
+        <property name="contentService" ref="ContentService" />
+        <property name="policyComponent" ref="policyComponent" />
+        <property name="digestTypes" value="${hackathon.content-stores.fingerprint.digest-types}" />
+    </bean>
 
 </beans>

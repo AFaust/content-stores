@@ -1,0 +1,21 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+           http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+    <!-- Note: All beans should be prefixed ${project.artifactId} in their ID in general -->
+    <!-- Exceptions: service beans (unique name) and beans with name conventions (e.g. web scripts) -->
+
+    <bean id="${project.artifactId}.dictionaryBootstrap" parent="dictionaryModelBootstrap">
+        <property name="models">
+            <list>
+                <value>alfresco/module/${project.artifactId}/context/fingerprintModel.xml</value>
+            </list>
+        </property>
+        <property name="labels">
+            <list>
+                <!-- <value>alfresco.messages.${messageBundle.rootId}.model</value> -->
+            </list>
+        </property>
+    </bean>
+
+</beans>

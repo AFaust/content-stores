@@ -6,129 +6,182 @@ import java.io.Serializable;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.alfresco.model.ContentModel;
-import org.alfresco.repo.content.ContentServicePolicies;
-import org.alfresco.repo.content.ContentServicePolicies.OnContentUpdatePolicy;
-import org.alfresco.repo.policy.Behaviour;
+import org.alfresco.repo.content.ContentServicePolicies.OnContentPropertyUpdatePolicy;
+import org.alfresco.repo.policy.Behaviour.NotificationFrequency;
 import org.alfresco.repo.policy.JavaBehaviour;
 import org.alfresco.repo.policy.PolicyComponent;
-import org.alfresco.service.ServiceRegistry;
+import org.alfresco.service.cmr.repository.ContentData;
 import org.alfresco.service.cmr.repository.ContentReader;
 import org.alfresco.service.cmr.repository.ContentService;
 import org.alfresco.service.cmr.repository.NodeRef;
 import org.alfresco.service.cmr.repository.NodeService;
-import org.alfresco.service.namespace.NamespaceService;
+import org.alfresco.service.cmr.repository.StoreRef;
 import org.alfresco.service.namespace.QName;
+import org.alfresco.util.PropertyCheck;
 import org.apache.commons.codec.binary.Hex;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 
-public class FingerprintPolicy implements
-		ContentServicePolicies.OnContentUpdatePolicy {
+/**
+ * Policy to generate content fingerprints on content property updates
+ *
+ */
+public class FingerprintPolicy implements OnContentPropertyUpdatePolicy, InitializingBean
+{
 
-	private static Logger log = Logger.getLogger(FingerprintPolicy.class);
+    private static Logger LOGGER = LoggerFactory.getLogger(FingerprintPolicy.class);
 
-	private PolicyComponent policyComponent;
+    private PolicyComponent policyComponent;
 
-	public void setPolicyComponent(PolicyComponent policyComponent) {
-		this.policyComponent = policyComponent;
-	}
+    private ContentService contentService;
 
-	private ServiceRegistry serviceRegistry;
+    private NodeService nodeService;
 
-	private String digestTypes;
-	private String propertiesToIndex;
+    private List<String> digestTypes = Collections.emptyList();
 
-	public void init() {
-		this.policyComponent.bindClassBehaviour(
-				OnContentUpdatePolicy.QNAME,
-				ContentModel.TYPE_CONTENT, new JavaBehaviour(this,
-						"onContentUpdate",
-						Behaviour.NotificationFrequency.EVERY_EVENT));
-	}
+    public void setPolicyComponent(final PolicyComponent policyComponent)
+    {
+        this.policyComponent = policyComponent;
+    }
 
-	public void setServiceRegistry(ServiceRegistry serviceRegistry) {
-		this.serviceRegistry = serviceRegistry;
-	}
+    /**
+     * @param contentService
+     *            the contentService to set
+     */
+    public final void setContentService(final ContentService contentService)
+    {
+        this.contentService = contentService;
+    }
 
-	public void setDigestTypes(String digestTypes) {
-		this.digestTypes = digestTypes;
-	}
+    /**
+     * @param nodeService
+     *            the nodeService to set
+     */
+    public final void setNodeService(final NodeService nodeService)
+    {
+        this.nodeService = nodeService;
+    }
 
-	public void setPropertiesToIndex(String propertiesToIndex) {
-		this.propertiesToIndex = propertiesToIndex;
-	}
+    public void setDigestTypes(final String digestTypes)
+    {
+        if (digestTypes != null && digestTypes.length() != 0)
+        {
+            this.digestTypes = Arrays.asList(digestTypes.split(","));
+        }
+        else
+        {
+            this.digestTypes = Collections.emptyList();
+        }
+    }
 
-	public void onContentUpdate(NodeRef nodeRef, boolean trueFalse) {
+    public void afterPropertiesSet()
+    {
+        PropertyCheck.mandatory(this, "nodeService", this.nodeService);
+        PropertyCheck.mandatory(this, "contentService", this.contentService);
+        PropertyCheck.mandatory(this, "policyComponent", this.policyComponent);
 
-		List<String> digestTypesL = new ArrayList<String>();
-		for (String digestType : this.digestTypes.split("|")) {
-			digestTypesL.add(digestType);
-		}
+        this.policyComponent.bindClassBehaviour(OnContentPropertyUpdatePolicy.QNAME, ContentModel.TYPE_CONTENT, new JavaBehaviour(this,
+                "onContentPropertyUpdate", NotificationFrequency.EVERY_EVENT));
+    }
 
-		List<String> propertiesToIndexL = new ArrayList<String>();
-		for (String propertyToIndex : this.propertiesToIndex.split("|")) {
-			propertiesToIndexL.add(propertyToIndex);
-		}
+    public void onContentPropertyUpdate(final NodeRef nodeRef, final QName propertyQName, final ContentData beforeValue,
+            final ContentData afterValue)
+    {
+        LOGGER.trace("onContentPropertyUpdate: {} for {}", nodeRef, propertyQName);
 
-		log.debug("onUpdateNode workspace://SpacesStore/" + nodeRef.getId());
+        // should only act on the standard store
+        if (StoreRef.STORE_REF_WORKSPACE_SPACESSTORE.equals(nodeRef.getStoreRef()))
+        {
 
-		ContentService contentService = serviceRegistry.getContentService();
-		NamespaceService namespaceService = serviceRegistry
-				.getNamespaceService();
-		NodeService nodeService = serviceRegistry.getNodeService();
+            final List<ContentFingerprint> fingerprints = new ArrayList<ContentFingerprint>();
 
-		List<String> fingerprints = new ArrayList<String>();
+            if (this.nodeService.hasAspect(nodeRef, ContentStoresModel.ASPECT_FINGERPRINT_DATA))
+            {
+                // need to retrieve existing fingerprints and potentially invalidate some
 
-		for (String digestType : digestTypesL) {
-			log.debug("Digest type: " + digestType);
+                final Serializable value = this.nodeService.getProperty(nodeRef, ContentStoresModel.PROP_FINGERPRINTS);
+                if (value instanceof List<?>)
+                {
+                    for (final Object element : (List<?>) value)
+                    {
+                        if (element instanceof ContentFingerprint)
+                        {
+                            final ContentFingerprint existingPrint = (ContentFingerprint) element;
 
-			for (String propertyToIndex : propertiesToIndexL) {
+                            // only prints for other properties remain valid
+                            if (!propertyQName.equals(existingPrint.getContentProperty()))
+                            {
+                                fingerprints.add(existingPrint);
+                            }
+                        }
+                    }
+                }
+            }
 
-				MessageDigest md = null;
-				try {
-					md = MessageDigest.getInstance(digestType);
-				} catch (NoSuchAlgorithmException e1) {
-					log.error(e1.getLocalizedMessage());
-				}
+            for (final String digestType : this.digestTypes)
+            {
+                LOGGER.debug("Calculatng digest for type: {}", digestType);
 
-				QName qProp = QName.createQName(propertyToIndex,
-						namespaceService);
+                MessageDigest digest = null;
+                try
+                {
+                    digest = MessageDigest.getInstance(digestType);
+                }
+                catch (final NoSuchAlgorithmException e1)
+                {
+                    LOGGER.error("Digest type is not available", e1);
+                }
 
-				ContentReader reader = contentService.getReader(nodeRef, qProp);
-				InputStream originalInputStream = reader
-						.getContentInputStream();
-				final int BUF_SIZE = 10 << 8; // 10KiB buffer
-				byte[] buffer = new byte[BUF_SIZE];
+                if (digest != null)
+                {
+                    final int BUF_SIZE = 10 << 8; // 10KiB buffer
+                    final byte[] buffer = new byte[BUF_SIZE];
 
-				try {
-					while ((originalInputStream.read(buffer)) > -1) {
-						md.update(buffer);
-					}
-					originalInputStream.close();
-				} catch (IOException e) {
-					log.error(e.getLocalizedMessage());
-				}
+                    final ContentReader reader = this.contentService.getReader(nodeRef, propertyQName);
+                    final InputStream originalInputStream = reader.getContentInputStream();
+                    try
+                    {
+                        while ((originalInputStream.read(buffer)) > -1)
+                        {
+                            digest.update(buffer);
+                        }
+                    }
+                    catch (final IOException e)
+                    {
+                        LOGGER.error("Error calculating digest", e);
+                    }
+                    finally
+                    {
+                        try
+                        {
+                            originalInputStream.close();
+                        }
+                        catch (final IOException e)
+                        {
+                            LOGGER.warn("Failed to closed input stream", e);
+                        }
+                    }
 
-				String hash = new String(Hex.encodeHex(md.digest()));
+                    final String digestValue = new String(Hex.encodeHex(digest.digest()));
+                    fingerprints.add(new ContentFingerprint(propertyQName, digestType, digestValue));
+                }
+            }
 
-				fingerprints.add(String.format("%s|%s|%s", propertyToIndex,
-						digestType, hash));
-
-			}
-		}
-
-		QName CUSTOM_ASPECT_QNAME = QName
-				.createQName("hack:fingerprintDataAspect");
-		QName PROP_QNAME_MY_PROPERTY = QName.createQName("hack:fingerprints");
-		Map<QName, Serializable> aspectValues = new HashMap<QName, Serializable>();
-		aspectValues.put(PROP_QNAME_MY_PROPERTY,
-				fingerprints.toArray(new String[fingerprints.size()]));
-		nodeService.addAspect(nodeRef, CUSTOM_ASPECT_QNAME, aspectValues);
-	}
-
-
+            if (!fingerprints.isEmpty())
+            {
+                this.nodeService.addProperties(nodeRef,
+                        Collections.<QName, Serializable> singletonMap(ContentStoresModel.PROP_FINGERPRINTS, (Serializable) fingerprints));
+            }
+            else if (this.nodeService.hasAspect(nodeRef, ContentStoresModel.ASPECT_FINGERPRINT_DATA))
+            {
+                this.nodeService.removeAspect(nodeRef, ContentStoresModel.ASPECT_FINGERPRINT_DATA);
+            }
+        }
+    }
 }
