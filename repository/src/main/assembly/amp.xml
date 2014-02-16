@@ -1,12 +1,73 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
+<assembly xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
     <id>amp</id>
     <formats>
         <format>amp</format>
     </formats>
     <includeBaseDirectory>false</includeBaseDirectory>
     <fileSets>
+        <fileSet>
+            <directory>${project.basedir}/src/main/config/global</directory>
+            <outputDirectory>globalConfig</outputDirectory>
+            <excludes>
+                <exclude>**/*.ftl</exclude>
+                <exclude>**/*.acp</exclude>
+                <exclude>**/*.exe</exclude>
+                <exclude>**/*.keystore</exclude>
+                <exclude>**/*.zip</exclude>
+                <exclude>**/*.jar</exclude>
+                <exclude>**/*.png</exclude>
+                <exclude>**/*.jpg</exclude>
+                <exclude>**/*.gif</exclude>
+                <exclude>**/dummy.txt</exclude>
+            </excludes>
+            <filtered>true</filtered>
+            <lineEnding>crlf</lineEnding>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/src/main/config/global</directory>
+            <outputDirectory>globalConfig</outputDirectory>
+            <includes>
+                <include>**/*.ftl</include>
+            </includes>
+            <excludes>
+                <exclude>**/dummy.txt</exclude>
+            </excludes>
+            <filtered>false</filtered>
+            <lineEnding>crlf</lineEnding>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/src/main/config/global</directory>
+            <outputDirectory>globalConfig</outputDirectory>
+            <includes>
+                <include>**/*.acp</include>
+                <include>**/*.exe</include>
+                <include>**/*.keystore</include>
+                <include>**/*.zip</include>
+                <include>**/*.jar</include>
+                <include>**/*.png</include>
+                <include>**/*.jpg</include>
+                <include>**/*.gif</include>
+            </includes>
+            <filtered>false</filtered>
+        </fileSet>
+
+        <fileSet>
+            <directory>${project.basedir}/src/main/config</directory>
+            <outputDirectory>config</outputDirectory>
+            <excludes>
+                <exclude>**/*.ftl</exclude>
+                <exclude>**/*.acp</exclude>
+                <exclude>**/*.exe</exclude>
+                <exclude>**/*.keystore</exclude>
+                <exclude>**/*.zip</exclude>
+                <exclude>**/*.jar</exclude>
+                <exclude>**/dummy.txt</exclude>
+                <exclude>global/**/*</exclude>
+            </excludes>
+            <filtered>true</filtered>
+            <lineEnding>crlf</lineEnding>
+        </fileSet>
         <fileSet>
             <directory>${project.basedir}/src/main/config</directory>
             <outputDirectory>config</outputDirectory>
@@ -15,37 +76,48 @@
             </includes>
             <excludes>
                 <exclude>**/dummy.txt</exclude>
-                <exclude>**/.gitignore</exclude>
+                <exclude>global/**/*</exclude>
             </excludes>
             <filtered>false</filtered>
+            <lineEnding>crlf</lineEnding>
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/src/main/config</directory>
             <outputDirectory>config</outputDirectory>
+            <includes>
+                <include>**/*.acp</include>
+                <include>**/*.exe</include>
+                <include>**/*.keystore</include>
+                <include>**/*.zip</include>
+                <include>**/*.jar</include>
+                <include>**/*.png</include>
+                <include>**/*.jpg</include>
+                <include>**/*.gif</include>
+            </includes>
             <excludes>
-                <exclude>**/*.ftl</exclude>
                 <exclude>**/dummy.txt</exclude>
-                <exclude>**/.gitignore</exclude>
+                <exclude>global/**/*</exclude>
             </excludes>
-            <filtered>true</filtered>
+            <filtered>false</filtered>
         </fileSet>
+
         <fileSet>
             <directory>${project.basedir}/src/main/webscripts</directory>
             <outputDirectory>webscripts</outputDirectory>
             <excludes>
                 <exclude>**/dummy.txt</exclude>
-                <exclude>**/.gitignore</exclude>
             </excludes>
             <filtered>false</filtered>
+            <lineEnding>crlf</lineEnding>
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/src/main/messages</directory>
             <outputDirectory>messages</outputDirectory>
             <excludes>
                 <exclude>**/dummy.txt</exclude>
-                <exclude>**/.gitignore</exclude>
             </excludes>
             <filtered>false</filtered>
+            <lineEnding>crlf</lineEnding>
         </fileSet>
         <fileSet>
             <directory>${project.basedir}/src/main/webapp</directory>
@@ -53,7 +125,21 @@
             <excludes>
                 <exclude>WEB-INF/**/*</exclude>
                 <exclude>**/dummy.txt</exclude>
-                <exclude>**/.gitignore</exclude>
+            </excludes>
+            <filtered>false</filtered>
+            <lineEnding>crlf</lineEnding>
+        </fileSet>
+        <fileSet>
+            <directory>${project.basedir}/src/main/webapp</directory>
+            <outputDirectory>web</outputDirectory>
+            <includes>
+                <include>**/*.png</include>
+                <include>**/*.jpg</include>
+                <include>**/*.gif</include>
+            </includes>
+            <excludes>
+                <exclude>WEB-INF/**/*</exclude>
+                <exclude>**/dummy.txt</exclude>
             </excludes>
             <filtered>false</filtered>
         </fileSet>
@@ -62,9 +148,12 @@
             <outputDirectory>web</outputDirectory>
             <excludes>
                 <exclude>**/dummy.txt</exclude>
-                <exclude>**/.gitignore</exclude>
+                <exclude>**/*.png</exclude>
+                <exclude>**/*.jpg</exclude>
+                <exclude>**/*.gif</exclude>
             </excludes>
             <filtered>false</filtered>
+            <lineEnding>crlf</lineEnding>
         </fileSet>
         <fileSet>
             <directory>${project.basedir}</directory>
@@ -72,10 +161,8 @@
             <includes>
                 <include>*.properties</include>
             </includes>
-            <excludes>
-                <exclude>**/.gitignore</exclude>
-            </excludes>
             <filtered>true</filtered>
+            <lineEnding>crlf</lineEnding>
         </fileSet>
     </fileSets>
     <files>

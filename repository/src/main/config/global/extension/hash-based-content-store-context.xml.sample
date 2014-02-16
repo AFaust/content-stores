@@ -1,0 +1,16 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE beans PUBLIC '-//SPRING//DTD BEAN//EN' 'http://www.springframework.org/dtd/spring-beans.dtd'>
+
+<beans>
+
+    <bean id="fileContentStore" class="org.alfresco.hackathon.HashBasedFileContentStore">
+      <property name="rootDirectory" value="${dir.contentstore}" />
+      <property name="messageDigestType" value="SHA-512" />
+      
+      
+      <!-- Uncomment the property below to add content filesize limit.
+      <property name="contentLimitProvider" ref="defaultContentLimitProvider"/>
+      -->
+   </bean>
+
+</beans>
