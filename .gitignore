@@ -1,13 +1,4 @@
-.settings
+.settings/
 .project
-target
-
-repository/.settings
-repository/.classpath
-repository/.project
-repository/target
-
-share/.settings
-share/.classpath
-share/.project
-share/target
+.classpath
+target/

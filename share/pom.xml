@@ -26,7 +26,7 @@
             <groupId>${alfresco.groupId}</groupId>
             <artifactId>alfresco-share</artifactId>
             <version>${alfresco.version}</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
             <exclusions>
                 <exclusion>
                     <groupId>${alfresco.groupId}</groupId>
@@ -39,6 +39,7 @@
             <groupId>${alfresco.groupId}</groupId>
             <artifactId>alfresco-web-framework-commons</artifactId>
             <version>${alfresco.version}</version>
+            <scope>provided</scope>
         </dependency>
 
     </dependencies>

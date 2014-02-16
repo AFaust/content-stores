@@ -9,7 +9,7 @@
     </parent>
 
     <artifactId>org.alfresco.hackathon.content-stores.repo</artifactId>
-    <name></name>
+    <name>Content Stores - Repository Module</name>
 
     <properties>
 
@@ -26,7 +26,7 @@
             <groupId>${alfresco.groupId}</groupId>
             <artifactId>alfresco-repository</artifactId>
             <version>${alfresco.version}</version>
-            <scope>compile</scope>
+            <scope>provided</scope>
         </dependency>
 
     </dependencies>
