@@ -3,7 +3,7 @@
 
 <beans>
 
-    <bean id="fileContentStore" class="org.alfresco.hackathon.HashBasedFileContentStore">
+    <bean id="fileContentStore" class="${basePackage}.HashBasedFileContentStore">
       <property name="rootDirectory" value="${dir.contentstore}" />
       <property name="messageDigestType" value="SHA-512" />
       

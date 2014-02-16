@@ -1,4 +1,4 @@
-package org.alfresco.hackathon;
+package org.alfresco.hackathon.content.stores.repo;
 
 import java.io.File;
 import java.io.IOException;
