@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package org.alfresco.hackathon.content.stores.share.web.scripts;
 
@@ -9,12 +9,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -22,7 +21,6 @@ import javax.servlet.http.HttpSession;
 import org.alfresco.util.ISO8601DateFormat;
 import org.alfresco.util.ParameterCheck;
 import org.alfresco.util.TempFileProvider;
-import org.alfresco.web.site.SlingshotUserFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -30,6 +28,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.extensions.surf.RequestContext;
 import org.springframework.extensions.surf.ServletUtil;
 import org.springframework.extensions.surf.exception.ConnectorServiceException;
+import org.springframework.extensions.surf.support.AlfrescoUserFactory;
 import org.springframework.extensions.surf.support.ThreadLocalRequestContext;
 import org.springframework.extensions.surf.util.URLEncoder;
 import org.springframework.extensions.webscripts.AbstractWebScript;
@@ -38,7 +37,9 @@ import org.springframework.extensions.webscripts.Status;
 import org.springframework.extensions.webscripts.WebScriptRequest;
 import org.springframework.extensions.webscripts.WebScriptResponse;
 import org.springframework.extensions.webscripts.connector.Connector;
+import org.springframework.extensions.webscripts.connector.ConnectorContext;
 import org.springframework.extensions.webscripts.connector.ConnectorService;
+import org.springframework.extensions.webscripts.connector.HttpMethod;
 import org.springframework.extensions.webscripts.connector.Response;
 import org.springframework.extensions.webscripts.servlet.WebScriptServletRequest;
 import org.springframework.extensions.webscripts.servlet.WebScriptServletResponse;
@@ -64,7 +65,7 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
         private final String storeIdentifier;
         private final String id;
 
-        private List<String> contentHashes = new ArrayList<String>();
+        private final Map<String, String> digests = new HashMap<String, String>();
         private String modifiedDateAsIso;
 
         private String extensionPath;
@@ -102,7 +103,7 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
          * @param property
          *            the property to set
          */
-        public final void setProperty(String property)
+        public final void setProperty(final String property)
         {
             this.property = property;
         }
@@ -119,7 +120,7 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
          * @param thumbnailName
          *            the thumbnailName to set
          */
-        public final void setThumbnailName(String thumbnailName)
+        public final void setThumbnailName(final String thumbnailName)
         {
             this.thumbnailName = thumbnailName;
         }
@@ -160,29 +161,30 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
          * @param extensionPath
          *            the extensionPath to set
          */
-        public final void setExtensionPath(String extensionPath)
+        public final void setExtensionPath(final String extensionPath)
         {
             this.extensionPath = extensionPath;
         }
 
         /**
-         * @return the contentHashes
+         * @return the digests
          */
-        public final List<String> getContentHashes()
+        public final Map<String, String> getDigests()
         {
-            return new ArrayList<String>(this.contentHashes);
+            return new HashMap<String, String>(this.digests);
         }
 
         /**
-         * @param contentHash
-         *            the contentHash to add
+         * @param digestType
+         *            the digestType
+         * @param digestValue
+         *            the digestValue
          */
-        public final void addContentHash(String contentHash)
+        public final void addDigest(final String digestType, final String digestValue)
         {
-            if (contentHash != null && contentHash.trim().length() != 0)
-            {
-                this.contentHashes.add(contentHash);
-            }
+            ParameterCheck.mandatoryString("digestType", digestType);
+            ParameterCheck.mandatoryString("digestValue", digestValue);
+            this.digests.put(digestType, digestValue);
         }
 
         /**
@@ -197,7 +199,7 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
          * @param modifiedDateAsIso
          *            the modifiedDateAsIso to set
          */
-        public final void setModifiedDateAsIso(String modifiedDateAsIso)
+        public final void setModifiedDateAsIso(final String modifiedDateAsIso)
         {
             this.modifiedDateAsIso = modifiedDateAsIso;
         }
@@ -214,7 +216,7 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
          * @param eTag
          *            the eTag to set
          */
-        public final void setETag(String eTag)
+        public final void setETag(final String eTag)
         {
             this.eTag = eTag;
         }
@@ -231,7 +233,7 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
          * @param mimetype
          *            the mimetype to set
          */
-        public final void setMimetype(String mimetype)
+        public final void setMimetype(final String mimetype)
         {
             this.mimetype = mimetype;
         }
@@ -248,7 +250,7 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
          * @param encoding
          *            the encoding to set
          */
-        public final void setEncoding(String encoding)
+        public final void setEncoding(final String encoding)
         {
             this.encoding = encoding;
         }
@@ -265,7 +267,7 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
          * @param attachment
          *            the attachment to set
          */
-        public final void setAttachment(boolean attachment)
+        public final void setAttachment(final boolean attachment)
         {
             this.attachment = attachment;
         }
@@ -282,7 +284,7 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
          * @param fileName
          *            the fileName to set
          */
-        public final void setFileName(String fileName)
+        public final void setFileName(final String fileName)
         {
             this.fileName = fileName;
         }
@@ -315,7 +317,7 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
      * @param connectorService
      *            the connectorService to set
      */
-    public final void setConnectorService(ConnectorService connectorService)
+    public final void setConnectorService(final ConnectorService connectorService)
     {
         this.connectorService = connectorService;
     }
@@ -324,7 +326,7 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
      * @param maxCacheTtl
      *            the maxCacheTtl to set
      */
-    public final void setMaxCacheTtl(long maxCacheTtl)
+    public final void setMaxCacheTtl(final long maxCacheTtl)
     {
         this.maxCacheTtl = maxCacheTtl;
     }
@@ -336,20 +338,20 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
     {
         final Status status = new Status();
 
-        final StreamParams streamParameters = readStreamParameters(req);
+        final StreamParams streamParameters = this.readStreamParameters(req);
 
-        checkRepository(req, res, status, streamParameters);
+        this.checkRepository(req, res, status, streamParameters);
 
         if (status.getRedirect())
         {
             if (status.getCode() == Status.STATUS_NOT_FOUND && streamParameters.getThumbnailName() != null)
             {
                 // the thumbnail may not yet exist
-                callThroughThumbnail(req, res, streamParameters);
+                this.callThroughThumbnail(req, res, streamParameters);
             }
             else
             {
-                sendStatus(req, res, status);
+                this.sendStatus(req, res, status);
             }
         }
         else
@@ -363,7 +365,7 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
                 {
                     modifiedSince = dateFormat.parse(modifiedSinceStr).getTime();
                 }
-                catch (Throwable e)
+                catch (final Throwable e)
                 {
                     modifiedSince = 0;
                 }
@@ -372,7 +374,7 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
                 {
                     final Date modified = ISO8601DateFormat.parse(streamParameters.getModifiedDateAsIso());
                     // round the date to the ignore millisecond value which is not supplied by header
-                    long modDate = (modified.getTime() / 1000L) * 1000L;
+                    final long modDate = (modified.getTime() / 1000L) * 1000L;
                     if (modDate <= modifiedSince)
                     {
                         res.setStatus(HttpServletResponse.SC_NOT_MODIFIED);
@@ -381,33 +383,33 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
                 }
             }
 
-            File cachedFile = getCachedFile(streamParameters);
+            File cachedFile = this.getCachedFile(streamParameters);
             if (cachedFile == null)
             {
-                cachedFile = cacheFile(streamParameters, status);
+                cachedFile = this.cacheFile(streamParameters, status);
             }
 
             if (status.getRedirect())
             {
-                sendStatus(req, res, status);
+                this.sendStatus(req, res, status);
             }
             else
             {
-                streamCachedFileImpl(req, res, streamParameters, cachedFile);
+                this.streamCachedFileImpl(req, res, streamParameters, cachedFile);
             }
         }
     }
 
-    protected void sendStatus(WebScriptRequest req, WebScriptResponse res, final Status status) throws IOException
+    protected void sendStatus(final WebScriptRequest req, final WebScriptResponse res, final Status status) throws IOException
     {
-        String format = req.getFormat();
-        Cache cache = new Cache(getDescription().getRequiredCache());
-        Map<String, Object> model = new HashMap<String, Object>();
+        final String format = req.getFormat();
+        final Cache cache = new Cache(this.getDescription().getRequiredCache());
+        final Map<String, Object> model = new HashMap<String, Object>();
         model.put("cache", cache);
         model.put("status", status);
 
-        Map<String, Object> templateModel = createTemplateParameters(req, res, model);
-        sendStatus(req, res, status, cache, format, templateModel);
+        final Map<String, Object> templateModel = this.createTemplateParameters(req, res, model);
+        this.sendStatus(req, res, status, cache, format, templateModel);
     }
 
     protected StreamParams readStreamParameters(final WebScriptRequest req)
@@ -438,7 +440,8 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
         params.setExtensionPath(req.getExtensionPath());
 
         final String attachParameter = req.getParameter("attach");
-        if (attachParameter != null && Boolean.parseBoolean(attachParameter))
+        final String aParameter = req.getParameter("a");
+        if ((attachParameter != null && Boolean.parseBoolean(attachParameter)) || (aParameter != null && Boolean.parseBoolean(aParameter)))
         {
             params.setAttachment(true);
         }
@@ -451,7 +454,7 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
     {
         try
         {
-            final Response response = executeRepositoryRequest(params);
+            final Response response = this.executeRepositoryRequest(params);
 
             if (response.getStatus().getCode() == 200)
             {
@@ -467,11 +470,11 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
                 final String modified = jsonObject.getString("modified");
                 params.setModifiedDateAsIso(modified);
 
-                final JSONArray hashValues = jsonObject.getJSONArray("hashValues");
-                for (int i = 0, max = hashValues.length(); i < max; i++)
+                final JSONArray digests = jsonObject.getJSONArray("fingerprints");
+                for (int i = 0, max = digests.length(); i < max; i++)
                 {
-                    final String hashValue = hashValues.getString(i);
-                    params.addContentHash(hashValue);
+                    final JSONObject digest = digests.getJSONObject(i);
+                    params.addDigest(digest.getString("digestType"), digest.getString("digestValue"));
                 }
             }
             else
@@ -493,58 +496,23 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
         final RequestContext requestContext = ThreadLocalRequestContext.getRequestContext();
         final String currentUserId = requestContext.getUserId();
         final HttpSession currentSession = ServletUtil.getSession(true);
-        final Connector connector = this.connectorService.getConnector(SlingshotUserFactory.ALFRESCO_ENDPOINT_ID, currentUserId,
+        final Connector connector = this.connectorService.getConnector(AlfrescoUserFactory.ALFRESCO_ENDPOINT_ID, currentUserId,
                 currentSession);
 
-        final StringBuilder uri = new StringBuilder(
-                MessageFormat.format("/api/hashCheck/{0}/{1}/{2}", URLEncoder.encode(params.getStoreType()),
-                        URLEncoder.encode(params.getStoreIdentifier()), URLEncoder.encode(params.getId())));
+        final StringBuilder uri = new StringBuilder(MessageFormat.format("/api/node/{0}/{1}/{2}", URLEncoder.encode(params.getStoreType()),
+                URLEncoder.encode(params.getStoreIdentifier()), URLEncoder.encode(params.getId())));
 
-        if (params.getFileName() != null || params.getExtensionPath() != null || params.getThumbnailName() != null
-                || params.getProperty() != null)
+        if (params.getProperty() != null)
         {
-            uri.append("?");
-
-            boolean initialParam = true;
-            if (params.getFileName() != null)
-            {
-                if (!initialParam)
-                {
-                    uri.append("&");
-                }
-                uri.append("fileName=").append(URLEncoder.encode(params.getFileName()));
-                initialParam = false;
-            }
-            else if (params.getExtensionPath() != null)
-            {
-                if (!initialParam)
-                {
-                    uri.append("&");
-                }
-                uri.append("fileName=").append(URLEncoder.encode(params.getExtensionPath()));
-                initialParam = false;
-            }
-
-            if (params.getProperty() != null)
-            {
-                if (!initialParam)
-                {
-                    uri.append("&");
-                }
-                uri.append("property=").append(URLEncoder.encode(params.getProperty()));
-                initialParam = false;
-            }
-
-            if (params.getThumbnailName() != null)
-            {
-                if (!initialParam)
-                {
-                    uri.append("&");
-                }
-                uri.append("thumbnailName=").append(URLEncoder.encode(params.getThumbnailName()));
-                initialParam = false;
-            }
+            uri.append("/").append(URLEncoder.encode(params.getProperty()));
         }
+        else if (params.getThumbnailName() != null)
+        {
+            uri.append("/").append(URLEncoder.encode(params.getThumbnailName()));
+        }
+
+        uri.append("/fingerprints?noCache=");
+        uri.append(String.valueOf(System.currentTimeMillis()));
 
         final Response response = connector.call(uri.toString());
         return response;
@@ -553,9 +521,10 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
     protected File getCachedFile(final StreamParams streamParameters)
     {
         File result = null;
-        for (final String contentHash : streamParameters.getContentHashes())
+        for (final Entry<String, String> digest : streamParameters.getDigests().entrySet())
         {
-            final File expectedCachedFile = new File(this.localCacheDirectory, contentHash + ".bin.cached");
+            final File expectedCachedFile = new File(MessageFormat.format("{0}/{1}/{2}.bin.cached",
+                    this.localCacheDirectory.getAbsolutePath(), digest.getKey(), digest.getValue()));
             if (expectedCachedFile.exists())
             {
                 result = expectedCachedFile;
@@ -571,7 +540,7 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
                     streamParameters.getProperty()));
             if (expectedIdentity.exists())
             {
-                long lastModified = expectedIdentity.lastModified();
+                final long lastModified = expectedIdentity.lastModified();
                 final String modifiedDateAsIso = streamParameters.getModifiedDateAsIso();
 
                 if (modifiedDateAsIso != null && ISO8601DateFormat.parse(modifiedDateAsIso).getTime() < lastModified)
@@ -603,7 +572,7 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
             final RequestContext requestContext = ThreadLocalRequestContext.getRequestContext();
             final String currentUserId = requestContext.getUserId();
             final HttpSession currentSession = ServletUtil.getSession(true);
-            final Connector connector = this.connectorService.getConnector(SlingshotUserFactory.ALFRESCO_ENDPOINT_ID, currentUserId,
+            final Connector connector = this.connectorService.getConnector(AlfrescoUserFactory.ALFRESCO_ENDPOINT_ID, currentUserId,
                     currentSession);
 
             final String property = streamParameters.getProperty() != null ? streamParameters.getProperty() : "";
@@ -621,9 +590,9 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
                 uri.append("?a=false");
             }
 
-            final List<String> contentHashes = streamParameters.getContentHashes();
+            final Map<String, String> digests = streamParameters.getDigests();
 
-            if (contentHashes.isEmpty())
+            if (digests.isEmpty())
             {
                 cacheFile = new File(this.localCacheDirectory, MessageFormat.format("{0}+{1}+{2}+{3}.bin.cached",
                         streamParameters.getStoreType(), streamParameters.getStoreIdentifier(), streamParameters.getId(),
@@ -631,17 +600,33 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
             }
             else
             {
-                cacheFile = new File(this.localCacheDirectory, MessageFormat.format("{0}.bin.cached", contentHashes.get(0)));
+                // TODO: symbolic links / in-memory mapping of multiple digests => file
+                final Entry<String, String> digest = digests.entrySet().iterator().next();
+                cacheFile = new File(MessageFormat.format("{0}/{1}/{2}.bin.cached", this.localCacheDirectory.getAbsolutePath(),
+                        digest.getKey(), digest.getValue()));
             }
 
             if (!cacheFile.exists())
             {
+                final File parent = cacheFile.getParentFile();
+                if (!parent.exists())
+                {
+                    parent.mkdirs();
+                }
+
                 cacheFile.createNewFile();
                 cacheFile.deleteOnExit();
             }
 
+            // build a connector context, stores information about how we will drive the remote client
+            // ensure we don't proxy over any browser to web-tier Authorization headers over to the endpoint
+            final Map<String, String> headers = new HashMap<String, String>(1, 1.0f);
+            headers.put("Authorization", null);
+            final ConnectorContext context = new ConnectorContext(HttpMethod.GET, null, headers);
+            context.setExceptionOnError(true);
+
             final FileOutputStream fout = new FileOutputStream(cacheFile);
-            final Response response = connector.call(uri.toString(), null, null, fout);
+            final Response response = connector.call(uri.toString(), context, null, fout);
             if (response.getStatus().getCode() != 200)
             {
                 cacheFile.delete();
@@ -651,7 +636,7 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
 
             // TODO: quota handling
         }
-        catch (Exception ex)
+        catch (final Exception ex)
         {
             if (cacheFile != null)
             {
@@ -689,7 +674,7 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
         res.setContentType(streamParameters.getMimetype());
         res.setContentEncoding(streamParameters.getEncoding());
 
-        long size = cachedFile.length();
+        final long size = cachedFile.length();
         res.setHeader(HEADER_CONTENT_RANGE, "bytes 0-" + Long.toString(size - 1L) + "/" + Long.toString(size));
         res.setHeader(HEADER_CONTENT_LENGTH, Long.toString(size));
 
@@ -703,7 +688,7 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
             final RequestContext requestContext = ThreadLocalRequestContext.getRequestContext();
             final String currentUserId = requestContext.getUserId();
             final HttpSession currentSession = ServletUtil.getSession(true);
-            final Connector connector = this.connectorService.getConnector(SlingshotUserFactory.ALFRESCO_ENDPOINT_ID, currentUserId,
+            final Connector connector = this.connectorService.getConnector(AlfrescoUserFactory.ALFRESCO_ENDPOINT_ID, currentUserId,
                     currentSession);
 
             final StringBuilder uri = new StringBuilder(MessageFormat.format("/api/node/{0}/{1}/{2}/content/thumbnails/{3}",
@@ -713,10 +698,6 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
             if (streamParameters.getFileName() != null)
             {
                 uri.append("/").append(URLEncoder.encode(streamParameters.getFileName()));
-            }
-            else if (streamParameters.getExtensionPath() != null)
-            {
-                uri.append("/").append(URLEncoder.encode(streamParameters.getExtensionPath()));
             }
 
             final String c = req.getParameter("c");
@@ -748,12 +729,21 @@ public class CachingContentStream extends AbstractWebScript implements Initializ
                 }
             }
 
+            // build a connector context, stores information about how we will drive the remote client
+            // ensure we don't proxy over any browser to web-tier Authorization headers over to the endpoint
+            final Map<String, String> headers = new HashMap<String, String>(1, 1.0f);
+            headers.put("Authorization", null);
+            final ConnectorContext context = new ConnectorContext(
+                    req instanceof WebScriptServletRequest ? HttpMethod.valueOf(((WebScriptServletRequest) req).getHttpServletRequest()
+                            .getMethod().toUpperCase()) : HttpMethod.GET, null, headers);
+            context.setExceptionOnError(true);
+            context.setContentType(req.getContentType());
             // TODO: handle non-servlet requests / responses
-            connector.call(uri.toString(), null,
+            connector.call(uri.toString(), context,
                     req instanceof WebScriptServletRequest ? ((WebScriptServletRequest) req).getHttpServletRequest() : null,
                     res instanceof WebScriptServletResponse ? ((WebScriptServletResponse) res).getHttpServletResponse() : null);
         }
-        catch (Exception ex)
+        catch (final Exception ex)
         {
             // TODO: log
         }

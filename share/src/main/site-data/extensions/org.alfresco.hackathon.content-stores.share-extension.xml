@@ -1,0 +1,80 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<extension>
+    <modules>
+        <module>
+            <id>${project.name}</id>
+            <version>${noSnapshotVersion}</version>
+            <auto-deploy>true</auto-deploy>
+
+            <components>
+
+                <component>
+                    <scope>template</scope>
+                    <source-id>documentlibrary</source-id>
+                    <region-id>actions-common</region-id>
+                    <sub-components>
+                        <sub-component id="hackathon-content-stores-actions-enhancer" index="55">
+                            <url>/components/hackathon/content-stores/documentlibrary/actions-common-enhancer</url>
+                            <properties>
+                                <dependencyGroup>documentlibrary</dependencyGroup>
+                            </properties>
+                        </sub-component>
+                    </sub-components>
+                </component>
+
+                <component>
+                    <scope>template</scope>
+                    <source-id>repository</source-id>
+                    <region-id>actions-common</region-id>
+                    <sub-components>
+                        <sub-component id="hackathon-content-stores-actions-enhancer" index="55">
+                            <url>/components/hackathon/content-stores/documentlibrary/actions-common-enhancer</url>
+                            <properties>
+                                <dependencyGroup>documentlibrary</dependencyGroup>
+                            </properties>
+                        </sub-component>
+                    </sub-components>
+                </component>
+
+                <component>
+                    <scope>template</scope>
+                    <source-id>document-details</source-id>
+                    <region-id>actions-common</region-id>
+                    <sub-components>
+                        <sub-component id="hackathon-content-stores-actions-enhancer" index="55">
+                            <url>/components/hackathon/content-stores/documentlibrary/actions-common-enhancer</url>
+                            <properties>
+                                <dependencyGroup>document-details</dependencyGroup>
+                            </properties>
+                        </sub-component>
+                    </sub-components>
+                </component>
+
+                <component>
+                    <scope>template</scope>
+                    <source-id>folder-details</source-id>
+                    <region-id>actions-common</region-id>
+                    <sub-components>
+                        <sub-component id="hackathon-content-stores-actions-enhancer" index="55">
+                            <url>/components/hackathon/content-stores/documentlibrary/actions-common-enhancer</url>
+                            <properties>
+                                <dependencyGroup>folder-details</dependencyGroup>
+                            </properties>
+                        </sub-component>
+                    </sub-components>
+                </component>
+
+            </components>
+
+            <customizations>
+
+                <customization>
+                    <targetPackageRoot>org.alfresco.components</targetPackageRoot>
+                    <sourcePackageRoot>org.alfresco.hackathon.content-stores.customizations.components</sourcePackageRoot>
+                </customization>
+
+            </customizations>
+
+        </module>
+    </modules>
+</extension>

@@ -1,0 +1,9 @@
+<webscript>
+    <shortname>Node fingerprints</shortname>
+    <description>Retrieves content fingerprints for a specific node.</description>
+    <url>/api/node/{storeType}/{storeId}/{id}/fingerprints</url>
+    <url>/api/node/{storeType}/{storeId}/{id}/{contentPropOrThumbnailName}/fingerprints</url>
+    <format default="json" />
+    <authentication>user</authentication>
+    <transaction allow="readonly">required</transaction>
+</webscript>

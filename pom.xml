@@ -39,8 +39,7 @@
                                 <rules>
                                     <requireJavaVersion>
                                         <version>[1.7.0,)</version>
-                                        <message>Alfresco 4.2 requires Java 7 - to cross-compile for Java 6 run Maven in Java 7 while activating
-                                            the Java6-crossCompile profile</message>
+                                        <message>Alfresco 4.2 requires Java 7 - to cross-compile for Java 6 run Maven in Java 7 while activating the Java6-crossCompile profile</message>
                                     </requireJavaVersion>
                                 </rules>
                             </configuration>

@@ -47,6 +47,9 @@ public class ContentFingerprint implements Serializable
             }
         });
 
+        // this requires at least Alfresco 4.1.1.3
+        NodePropertyValue.IMMUTABLE_CLASSES.add(ContentFingerprint.class);
+
         try
         {
             // unfortunately, Alfresco by default does not offer a proper way to register new datatypes

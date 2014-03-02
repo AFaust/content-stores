@@ -1,10 +1,12 @@
 <webscript>
     <shortname>Caching Stream</shortname>
-    <description></description>
+    <description>Web script facade to handle content streams in a way that allows Share to cache contents, reducing network and Repository load in the process.</description>
+    <url>/api/node/content/{storeType}/{storeId}/{id}?a={attach?}</url>
+    <url>/api/node/content/{storeType}/{storeId}/{id}/{fileName}?a={attach?}</url>
+    <url>/api/node/content/{storeType}/{storeId}/{id}/prop/{property}?a={attach?}</url>
+    <url>/api/node/content/{storeType}/{storeId}/{id}/prop/{property}/{fileName}?a={attach?}</url>
     <url>/api/node/{storeType}/{storeId}/{id}/content/thumbnails/{thumbnailName}?c={queueforcecreate?}&amp;ph={placeholder?}</url>
     <url>/api/node/{storeType}/{storeId}/{id}/content/thumbnails/{thumbnailName}/{fileName}?c={queueforcecreate?}&amp;ph={placeholder?}</url>
-    <url>/api/node/content{property}/{storeType}/{storeId}/{id}?a={attach?}</url>
-    <url>/api/node/{storeType}/{storeId}/{id}/content{property}?a={attach?}</url>
     <format default="json">argument</format>
     <authentication>user</authentication>
 </webscript>
