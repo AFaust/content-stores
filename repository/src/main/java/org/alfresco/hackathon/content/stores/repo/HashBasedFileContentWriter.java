@@ -3,15 +3,19 @@ package org.alfresco.hackathon.content.stores.repo;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.nio.channels.Channels;
 import java.nio.channels.WritableByteChannel;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
+import java.util.List;
 
+import org.alfresco.error.AlfrescoRuntimeException;
 import org.alfresco.repo.content.AbstractContentWriter;
 import org.alfresco.service.cmr.repository.ContentData;
 import org.alfresco.service.cmr.repository.ContentIOException;
 import org.alfresco.service.cmr.repository.ContentReader;
+import org.alfresco.service.cmr.repository.ContentStreamListener;
 import org.alfresco.service.cmr.repository.ContentWriter;
 import org.alfresco.util.TempFileProvider;
 import org.slf4j.Logger;
@@ -49,12 +53,28 @@ public class HashBasedFileContentWriter extends AbstractContentWriter
         return this.store;
     }
 
-    public HashBasedFileContentWriter(final HashBasedFileContentStore contentStore, final ContentReader existingContentReader, final String messageDigestType)
+    public HashBasedFileContentWriter(final HashBasedFileContentStore contentStore, final ContentReader existingContentReader,
+            final String messageDigestType)
     {
         super("dedup://dummy", existingContentReader);
         this.store = contentStore;
         this.messageDigestType = messageDigestType;
-        this.addListener(new HashBasedWriterStreamListener(this));
+
+        // we need to be the first listener - due to lack of member visibility, we need to use reflection
+        try
+        {
+
+            final Field listenersField = AbstractContentWriter.class.getDeclaredField("listeners");
+            listenersField.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            final List<ContentStreamListener> listeners = (List<ContentStreamListener>) listenersField.get(this);
+
+            listeners.add(0, new HashBasedWriterStreamListener(this));
+        }
+        catch (final Throwable e)
+        {
+            throw new AlfrescoRuntimeException("Failed to register hash stream listener", e);
+        }
     }
 
     @Override
@@ -67,7 +87,7 @@ public class HashBasedFileContentWriter extends AbstractContentWriter
     @Override
     public long getSize()
     {
-        if(this.tempFile != null && this.tempFile.exists())
+        if (this.tempFile != null && this.tempFile.exists())
         {
             return this.tempFile.length();
         }
@@ -83,7 +103,7 @@ public class HashBasedFileContentWriter extends AbstractContentWriter
     @Override
     public String getContentUrl()
     {
-        if(this.contentUrl == null)
+        if (this.contentUrl == null)
         {
             return super.getContentUrl();
         }

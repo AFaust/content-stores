@@ -11,7 +11,7 @@
 
             if (this.options.api === "api" && YAHOO.lang.isString(url))
             {
-                url = url.replace(Alfresco.constants.PROXY_URI, Alfresco.constants.URL_SERVICECONTEXT);
+                url = url.replace(Alfresco.constants.PROXY_URI_RELATIVE, Alfresco.constants.URL_SERVICECONTEXT);
             }
 
             return url;
@@ -23,7 +23,7 @@
 
             if (this.options.api === "api" && YAHOO.lang.isString(url))
             {
-                url = url.replace(Alfresco.constants.PROXY_URI, Alfresco.constants.URL_SERVICECONTEXT);
+                url = url.replace(Alfresco.constants.PROXY_URI_RELATIVE, Alfresco.constants.URL_SERVICECONTEXT);
             }
 
             return url;

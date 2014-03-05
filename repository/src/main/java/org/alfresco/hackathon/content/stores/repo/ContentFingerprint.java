@@ -1,12 +1,8 @@
 package org.alfresco.hackathon.content.stores.repo;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
 import java.text.MessageFormat;
-import java.util.Map;
 
-import org.alfresco.error.AlfrescoRuntimeException;
-import org.alfresco.repo.domain.node.NodePropertyValue;
 import org.alfresco.service.cmr.repository.datatype.DefaultTypeConverter;
 import org.alfresco.service.cmr.repository.datatype.TypeConversionException;
 import org.alfresco.service.cmr.repository.datatype.TypeConverter.Converter;
@@ -23,9 +19,9 @@ public class ContentFingerprint implements Serializable
         {
             public String convert(final ContentFingerprint source)
             {
-                final String value = MessageFormat.format("%s|%s|%s", source.getContentProperty().toString(),
+                final String value = MessageFormat.format("{0}|{1}|{2}", source.getContentProperty().toString(),
                         source.getMessageDigestType(), source.getDigestValue());
-                return null;
+                return value;
             }
         });
 
@@ -46,35 +42,11 @@ public class ContentFingerprint implements Serializable
                 return fingerprint;
             }
         });
-
-        // this requires at least Alfresco 4.1.1.3
-        NodePropertyValue.IMMUTABLE_CLASSES.add(ContentFingerprint.class);
-
-        try
-        {
-            // unfortunately, Alfresco by default does not offer a proper way to register new datatypes
-            @SuppressWarnings({ "unchecked", "rawtypes" })
-            final Class<? extends Enum> valueTypeClass = (Class<? extends Enum>) Class.forName(NodePropertyValue.class.getCanonicalName()
-                    + "$ValueType");
-            @SuppressWarnings("unchecked")
-            final Object stringValueType = Enum.valueOf(valueTypeClass, "SERIALIZABLE");
-
-            final Field valueTypesByPropertyTypeField = NodePropertyValue.class.getDeclaredField("valueTypesByPropertyType");
-            valueTypesByPropertyTypeField.setAccessible(true);
-            @SuppressWarnings("unchecked")
-            final Map<QName, Object> valueTypesByPropertyType = (Map<QName, Object>) valueTypesByPropertyTypeField.get(null);
-            valueTypesByPropertyType.put(ContentStoresModel.DATATYPE_CONTENT_FINGERPRINT, stringValueType);
-        }
-        catch (final Throwable e)
-        {
-            throw new AlfrescoRuntimeException("Failed to register custom datatype", e);
-        }
     }
 
     private final QName contentProperty;
     private final String messageDigestType;
     private final String digestValue;
-
 
     /**
      * Constructor for serialization
@@ -127,4 +99,83 @@ public class ContentFingerprint implements Serializable
         return this.digestValue;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode()
+    {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((this.contentProperty == null) ? 0 : this.contentProperty.hashCode());
+        result = prime * result + ((this.digestValue == null) ? 0 : this.digestValue.hashCode());
+        result = prime * result + ((this.messageDigestType == null) ? 0 : this.messageDigestType.hashCode());
+        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj)
+    {
+        if (this == obj)
+        {
+            return true;
+        }
+        if (obj == null)
+        {
+            return false;
+        }
+        if (!(obj instanceof ContentFingerprint))
+        {
+            return false;
+        }
+        final ContentFingerprint other = (ContentFingerprint) obj;
+        if (this.contentProperty == null)
+        {
+            if (other.contentProperty != null)
+            {
+                return false;
+            }
+        }
+        else if (!this.contentProperty.equals(other.contentProperty))
+        {
+            return false;
+        }
+        if (this.digestValue == null)
+        {
+            if (other.digestValue != null)
+            {
+                return false;
+            }
+        }
+        else if (!this.digestValue.equals(other.digestValue))
+        {
+            return false;
+        }
+        if (this.messageDigestType == null)
+        {
+            if (other.messageDigestType != null)
+            {
+                return false;
+            }
+        }
+        else if (!this.messageDigestType.equals(other.messageDigestType))
+        {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     *
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString()
+    {
+        final String toString = DefaultTypeConverter.INSTANCE.convert(String.class, this);
+        return toString;
+    }
 }

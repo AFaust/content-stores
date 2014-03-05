@@ -1,4 +1,22 @@
 <?xml version='1.0' encoding='UTF-8' ?>
 <alfresco-config>
 
+    <config evaluator="aspect" condition="hack:fingerprintData">
+        <forms>
+            <form>
+                <field-visibility>
+                    <show id="hack:fingerprints" for-mode="view" />
+                </field-visibility>
+            </form>
+        </forms>
+    </config>
+
+    <config>
+        <forms>
+            <default-controls>
+                <type name="contentFingerprint" template="/org/alfresco/hackathon/content-stores/components/form/controls/fingerprint.ftl" />
+            </default-controls>
+        </forms>
+    </config>
+
 </alfresco-config>

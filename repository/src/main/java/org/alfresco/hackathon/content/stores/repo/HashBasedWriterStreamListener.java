@@ -3,7 +3,9 @@ package org.alfresco.hackathon.content.stores.repo;
 import java.io.File;
 import java.io.IOException;
 import java.security.MessageDigest;
+import java.util.Set;
 
+import org.alfresco.repo.transaction.TransactionalResourceHelper;
 import org.alfresco.service.cmr.repository.ContentIOException;
 import org.alfresco.service.cmr.repository.ContentStreamListener;
 import org.apache.commons.io.FileUtils;
@@ -19,6 +21,7 @@ import com.coremedia.iso.Hex;
  */
 public class HashBasedWriterStreamListener implements ContentStreamListener
 {
+    private static final String KEY_POST_ROLLBACK_DELETION_URLS = "ContentStoreCleaner.PostRollbackDeletionUrls";
     private static final Log logger = LogFactory.getLog(HashBasedWriterStreamListener.class);
 
     private final HashBasedFileContentWriter writer;
@@ -49,11 +52,17 @@ public class HashBasedWriterStreamListener implements ContentStreamListener
         {
             try
             {
+                // need to update new content URLs in txn
+                final Set<String> urlsToDelete = TransactionalResourceHelper.getSet(KEY_POST_ROLLBACK_DELETION_URLS);
+                urlsToDelete.remove(this.writer.getContentUrl());
+
                 final String contentUrl = this.store.createContentUrl(digestHex);
 
                 final File targetFile = this.store.makeFile(contentUrl);
                 if (!targetFile.exists())
                 {
+                    // file does not exist, so mark for deletion in case of rollback
+                    urlsToDelete.add(contentUrl);
                     try
                     {
                         FileUtils.copyFile(tempFile, targetFile);
@@ -68,7 +77,6 @@ public class HashBasedWriterStreamListener implements ContentStreamListener
                 // now we can set the new important values for db
                 this.writer.setContentUrl(contentUrl);
                 this.writer.setSize(tempFile.length());
-
             }
             finally
             {

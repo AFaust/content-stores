@@ -3,15 +3,19 @@ package org.alfresco.hackathon.content.stores.repo;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
+import org.alfresco.error.AlfrescoRuntimeException;
 import org.alfresco.model.ContentModel;
 import org.alfresco.repo.content.ContentServicePolicies.OnContentPropertyUpdatePolicy;
+import org.alfresco.repo.domain.node.NodePropertyValue;
 import org.alfresco.repo.policy.Behaviour.NotificationFrequency;
 import org.alfresco.repo.policy.JavaBehaviour;
 import org.alfresco.repo.policy.PolicyComponent;
@@ -34,6 +38,34 @@ import org.springframework.beans.factory.InitializingBean;
  */
 public class FingerprintPolicy implements OnContentPropertyUpdatePolicy, InitializingBean
 {
+
+    // TODO: find a better place for this
+    // can't be in ContentFingerprint itself (to avoid issues in SOLR), but is not a part of the policy either
+    static
+    {
+        // this requires at least Alfresco 4.1.1.3
+        NodePropertyValue.IMMUTABLE_CLASSES.add(ContentFingerprint.class);
+
+        try
+        {
+            // unfortunately, Alfresco by default does not offer a proper way to register new datatypes
+            @SuppressWarnings({ "unchecked", "rawtypes" })
+            final Class<? extends Enum> valueTypeClass = (Class<? extends Enum>) Class.forName(NodePropertyValue.class.getCanonicalName()
+                    + "$ValueType");
+            @SuppressWarnings("unchecked")
+            final Object stringValueType = Enum.valueOf(valueTypeClass, "SERIALIZABLE");
+
+            final Field valueTypesByPropertyTypeField = NodePropertyValue.class.getDeclaredField("valueTypesByPropertyType");
+            valueTypesByPropertyTypeField.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            final Map<QName, Object> valueTypesByPropertyType = (Map<QName, Object>) valueTypesByPropertyTypeField.get(null);
+            valueTypesByPropertyType.put(ContentStoresModel.DATATYPE_CONTENT_FINGERPRINT, stringValueType);
+        }
+        catch (final Throwable e)
+        {
+            throw new AlfrescoRuntimeException("Failed to register custom datatype", e);
+        }
+    }
 
     private static Logger LOGGER = LoggerFactory.getLogger(FingerprintPolicy.class);
 
